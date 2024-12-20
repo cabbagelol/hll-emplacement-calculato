@@ -1,7 +1,5 @@
 // ignore_for_file: must_be_immutable
 
-
-
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -71,6 +69,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     urlUtil.opEnPage(context, "/setting/version");
   }
 
+  /// 首页面板配置
+  void _openHomeAppConfig() {
+    Navigator.pop(context);
+    urlUtil.opEnPage(context, "/setting/homeAppConfig");
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -99,10 +103,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           child: ListView(
                             padding: EdgeInsets.zero,
                             children: [
-                              DrawerHeader(
-                                curve: Curves.bounceIn,
-                                child: Container(),
-                              ),
                               ListTile(
                                 title: Text(FlutterI18n.translate(context, "setting.cell.history.title")),
                                 trailing: const Icon(Icons.chevron_right),
@@ -119,6 +119,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () => _openSetting(),
                               ),
+                              const Divider(),
+                              ListTile(
+                                dense: true,
+                                title: Text(FlutterI18n.translate(context, "home.function.title")),
+                                trailing: IconButton(
+                                  onPressed: () => _openHomeAppConfig(),
+                                  icon: const Icon(Icons.settings, size: 20),
+                                ),
+                              ),
+                              ...homeAppData.activeList.asMap().entries.map((i) {
+                                var menu = i.value, index = i.key;
+                                return ListTile(
+                                  title: Text(FlutterI18n.translate(context, "${menu.type.name}.title")),
+                                  leading: menu.icon,
+                                  onTap: () {
+                                    setState(() {
+                                      _pageController.jumpToPage(index);
+                                      Navigator.of(context).pop();
+                                    });
+                                  },
+                                );
+                              }),
                             ],
                           ),
                         ),

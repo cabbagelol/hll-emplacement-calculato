@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +23,7 @@ class GunComparisonTablePage extends HomeAppWidget {
 class _GunComparisonTablePageState extends State<GunComparisonTablePage> with AutomaticKeepAliveClientMixin {
   Factions inputFactions = Factions.None;
 
-  ValueNotifier<TextEditingController> _textController = ValueNotifier(TextEditingController());
+  final ValueNotifier<TextEditingController> _textController = ValueNotifier(TextEditingController());
 
   // 火炮表格
   List gunCalcTable = [];
@@ -277,103 +278,145 @@ class _GunComparisonTablePageState extends State<GunComparisonTablePage> with Au
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              /// table header
-              Container(
-                color: Theme.of(context).primaryColor.withOpacity(.1),
-                child: Table(
-                  children: [
-                    TableRow(
-                      children: [
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                            child: Text(FlutterI18n.translate(context, "gunComparisonTable.distance"), textAlign: TextAlign.end),
-                          ),
-                        ),
-                        TableCell(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                            child: Text(FlutterI18n.translate(context, "gunComparisonTable.density")),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
               /// table content
               Expanded(
                 flex: 1,
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: gunCalcTable.length,
-                  itemBuilder: (context, index) {
-                    List gunItem = gunCalcTable[index];
+                child: Stack(
+                  children: [
+                    ListView.separated(
+                      padding: EdgeInsets.zero,
+                      itemCount: gunCalcTable.length,
+                      itemBuilder: (context, index) {
+                        List gunItem = gunCalcTable[index];
 
-                    return Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            color: Theme.of(context).primaryColor.withOpacity(.03),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (gunItem[0].toString().trim() == _textController.value.text.trim())
-                                    const SizedBox(
-                                      child: Icon(Icons.search),
-                                      width: 40,
+                        return Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                child: Wrap(
+                                  alignment: WrapAlignment.end,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 5,
+                                  children: [
+                                    const SizedBox(width: 8),
+                                    if (gunItem[0].toString().trim() == _textController.value.text.trim())
+                                      const SizedBox(
+                                        width: 40,
+                                        child: Icon(Icons.search),
+                                      ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Clipboard.setData(gunItem[0]);
+                                      },
+                                      child: Text(
+                                        "${gunItem[0]}",
+                                        style: TextStyle(
+                                          color: gunItem[0].toString().trim() == _textController.value.text.trim() ? Theme.of(context).colorScheme.primary : null,
+                                          fontSize: 25,
+                                          fontWeight: gunItem[0].toString().trim() == _textController.value.text.trim() ? FontWeight.bold : FontWeight.normal,
+                                          decoration: TextDecoration.underline,
+                                          decorationStyle: TextDecorationStyle.dashed,
+                                        ),
+                                      ),
                                     ),
-                                  Text(
-                                    "${gunItem[0]}",
-                                    style: TextStyle(
-                                      color: gunItem[0].toString().trim() == _textController.value.text.trim() ? Theme.of(context).colorScheme.primary : null,
-                                      fontSize: 25,
-                                      fontWeight: gunItem[0].toString().trim() == _textController.value.text.trim() ? FontWeight.bold : FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    "${gunItem[1]}",
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      color: Theme.of(context).primaryColor,
-                                      fontWeight: gunItem[0].toString().trim() == _textController.value.text.trim() ? FontWeight.bold : FontWeight.normal,
+                            Container(
+                              width: MediaQuery.of(context).size.width / 8,
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              constraints: const BoxConstraints(
+                                minWidth: 10,
+                                maxWidth: 100,
+                              ),
+                              child: const Divider(height: 1),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                child: Wrap(
+                                  alignment: WrapAlignment.start,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 5,
+                                  children: [
+                                    Text(
+                                      "${gunItem[1]}",
+                                      style: TextStyle(
+                                        fontSize: 25,
+                                        color: Color.lerp(Theme.of(context).primaryColor, Colors.red, .1),
+                                        fontWeight: gunItem[0].toString().trim() == _textController.value.text.trim() ? FontWeight.bold : FontWeight.normal,
+                                      ),
                                     ),
-                                  ),
+                                    Text(
+                                      FlutterI18n.translate(context, "gunComparisonTable.density"),
+                                      style: TextStyle(
+                                        color: Theme.of(context).primaryColor.withOpacity(.4),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  FlutterI18n.translate(context, "gunComparisonTable.density"),
-                                  style: TextStyle(color: Theme.of(context).primaryColor.withOpacity(.4)),
-                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) {
+                        return const SizedBox(height: 5);
+                      },
+                    ),
+
+                    /// top mark
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        ignoring: true,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Theme.of(context).colorScheme.surface,
+                                Theme.of(context).colorScheme.surface.withOpacity(.95),
+                                Theme.of(context).colorScheme.surface.withOpacity(.0),
                               ],
                             ),
                           ),
+                          height: 80,
                         ),
-                      ],
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) {
-                    return const Opacity(
-                      opacity: .5,
-                      child: Divider(height: 1),
-                    );
-                  },
+                      ),
+                    ),
+
+                    /// bottom mark
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        ignoring: true,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Theme.of(context).colorScheme.surface.withOpacity(.0),
+                                Theme.of(context).colorScheme.surface.withOpacity(.95),
+                                Theme.of(context).colorScheme.surface,
+                              ],
+                            ),
+                          ),
+                          height: 80,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
